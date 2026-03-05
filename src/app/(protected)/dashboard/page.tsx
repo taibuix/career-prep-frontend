@@ -30,7 +30,7 @@ export default function DashBoardPage() {
                             Career Command Center
                         </p>
                         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                            Welcome back. Keep your prep streak going.
+                            Welcome back. Keep your prep streak going (updated).
                         </h1>
                         <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
                             Track your interview, resume, and application progress in one place.
