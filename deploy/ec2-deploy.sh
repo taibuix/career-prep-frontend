@@ -3,7 +3,6 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/home/ubuntu/career-prep-frontend}"
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
-NODE_ENV="${NODE_ENV:-production}"
 PM2_APP_NAME="${PM2_APP_NAME:-career-prep-frontend}"
 PORT="${PORT:-3000}"
 
@@ -31,11 +30,12 @@ git fetch --all --prune
 git checkout "${DEPLOY_BRANCH}"
 git pull --ff-only origin "${DEPLOY_BRANCH}"
 
-export NODE_ENV
 export PORT
 
-npm ci
+npm ci --include=dev
 npm run build -- --webpack
+
+export NODE_ENV="production"
 
 if pm2 describe "${PM2_APP_NAME}" >/dev/null 2>&1; then
   pm2 restart "${PM2_APP_NAME}" --update-env
