@@ -59,6 +59,8 @@ jobs:
             fi
             export APP_DIR DEPLOY_BRANCH NODE_ENV PM2_APP_NAME PORT
             cd "${APP_DIR}"
+            git reset --hard
+            git clean -fd
             git fetch --all --prune
             git checkout "${DEPLOY_BRANCH}"
             git pull --ff-only origin "${DEPLOY_BRANCH}"

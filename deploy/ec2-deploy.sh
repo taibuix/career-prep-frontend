@@ -23,6 +23,10 @@ if [[ ! -d ".git" ]]; then
   exit 1
 fi
 
+# Deployment clones should be immutable. Clean local drift before switching branches.
+git reset --hard
+git clean -fd
+
 git fetch --all --prune
 git checkout "${DEPLOY_BRANCH}"
 git pull --ff-only origin "${DEPLOY_BRANCH}"
