@@ -69,6 +69,7 @@ jobs:
             git pull --ff-only origin "${DEPLOY_BRANCH}"
             echo "Current directory: $(pwd)"
             echo "Current branch: $(git branch --show-current)"
+            echo "Deploying commit: $(git rev-parse --short HEAD)"
             if [ -f "./deploy/ec2-deploy.sh" ]; then
               bash "./deploy/ec2-deploy.sh"
             else
@@ -77,10 +78,8 @@ jobs:
               npm ci --include=dev
               npm run build -- --webpack
               export NODE_ENV="production"
-              if pm2 describe "${PM2_APP_NAME}" >/dev/null 2>&1; then
-                pm2 restart "${PM2_APP_NAME}" --update-env
-              else
-                pm2 start npm --name "${PM2_APP_NAME}" -- run start
-              fi
+              pm2 delete "${PM2_APP_NAME}" >/dev/null 2>&1 || true
+              pm2 start npm --name "${PM2_APP_NAME}" --cwd "${APP_DIR}" -- run start
+              pm2 show "${PM2_APP_NAME}" | sed -n '1,20p'
               pm2 save
             fi
