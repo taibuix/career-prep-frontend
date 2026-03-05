@@ -22,6 +22,11 @@ if [[ ! -d ".git" ]]; then
   exit 1
 fi
 
+# Free disk before git/index operations on small EC2 volumes.
+rm -rf node_modules .next || true
+npm cache clean --force || true
+df -h .
+
 # Deployment clones should be immutable. Clean local drift before switching branches.
 git reset --hard
 git clean -fd

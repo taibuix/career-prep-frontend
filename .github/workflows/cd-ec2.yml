@@ -59,6 +59,9 @@ jobs:
             fi
             export APP_DIR DEPLOY_BRANCH NODE_ENV PM2_APP_NAME PORT
             cd "${APP_DIR}"
+            rm -rf node_modules .next || true
+            npm cache clean --force || true
+            df -h .
             git reset --hard
             git clean -fd
             git fetch --all --prune
