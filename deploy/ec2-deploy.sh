@@ -34,6 +34,7 @@ git clean -fd
 git fetch --all --prune
 git checkout "${DEPLOY_BRANCH}"
 git pull --ff-only origin "${DEPLOY_BRANCH}"
+echo "Deploying commit: $(git rev-parse --short HEAD)"
 
 export PORT
 
@@ -42,11 +43,9 @@ npm run build -- --webpack
 
 export NODE_ENV="production"
 
-if pm2 describe "${PM2_APP_NAME}" >/dev/null 2>&1; then
-  pm2 restart "${PM2_APP_NAME}" --update-env
-else
-  pm2 start npm --name "${PM2_APP_NAME}" -- run start
-fi
+pm2 delete "${PM2_APP_NAME}" >/dev/null 2>&1 || true
+pm2 start npm --name "${PM2_APP_NAME}" --cwd "${APP_DIR}" -- run start
+pm2 show "${PM2_APP_NAME}" | sed -n '1,20p'
 
 pm2 save
 echo "Frontend deploy completed successfully"
