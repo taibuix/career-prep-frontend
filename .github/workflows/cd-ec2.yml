@@ -64,9 +64,18 @@ jobs:
             git pull --ff-only origin "${DEPLOY_BRANCH}"
             echo "Current directory: $(pwd)"
             echo "Current branch: $(git branch --show-current)"
-            if [ ! -f "./deploy/ec2-deploy.sh" ]; then
-              echo "deploy/ec2-deploy.sh not found in ${APP_DIR} on branch ${DEPLOY_BRANCH}" >&2
+            if [ -f "./deploy/ec2-deploy.sh" ]; then
+              bash "./deploy/ec2-deploy.sh"
+            else
+              echo "deploy/ec2-deploy.sh not found; running inline fallback deploy" >&2
               ls -la
-              exit 1
+              export NODE_ENV PORT
+              npm ci
+              npm run build -- --webpack
+              if pm2 describe "${PM2_APP_NAME}" >/dev/null 2>&1; then
+                pm2 restart "${PM2_APP_NAME}" --update-env
+              else
+                pm2 start npm --name "${PM2_APP_NAME}" -- run start
+              fi
+              pm2 save
             fi
-            bash "./deploy/ec2-deploy.sh"
