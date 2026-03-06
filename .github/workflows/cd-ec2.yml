@@ -1,85 +1,51 @@
 name: CD (EC2)
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: "Branch to deploy"
-        required: true
-        default: "dev"
-
-concurrency:
-  group: cd-${{ github.ref_name || github.event.workflow_run.head_branch || 'manual' }}
-  cancel-in-progress: true
+  push:
+    branches: [main]
 
 jobs:
-  deploy:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'dev'))
+  build-and-deploy:
     runs-on: ubuntu-latest
-
+  
     steps:
-      - name: Validate required secrets
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
-        run: |
-          set -euo pipefail
-          [ -n "${EC2_HOST}" ] || { echo "::error::Missing repository secret: EC2_HOST"; exit 1; }
-          [ -n "${EC2_USER}" ] || { echo "::error::Missing repository secret: EC2_USER"; exit 1; }
-          [ -n "${EC2_SSH_PRIVATE_KEY}" ] || { echo "::error::Missing repository secret: EC2_SSH_PRIVATE_KEY"; exit 1; }
-          [ -n "${EC2_APP_DIR}" ] || { echo "::error::Missing repository secret: EC2_APP_DIR"; exit 1; }
+      - name: checkout repo
+        uses: actions/checkout@v4
 
-      - name: Deploy to EC2 over SSH
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: 
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build Next.js
+        run: npm run build
+      - name: Create deployment package
+        run: |
+          tar -czf deploy.tar.gz \
+          .next \
+          public \
+          package.json \
+          package-lock.json \
+          next.config.js
+      - name: Upload to EC2
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          port: ${{ secrets.EC2_PORT || 22 }}
-          script_stop: true
-          envs: APP_DIR,DEPLOY_BRANCH,NODE_ENV,PM2_APP_NAME,PORT
+          source: "deploy.tar.gz"
+          target: "/var/www/frontend"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            set -euo pipefail
-            APP_DIR="${{ secrets.EC2_APP_DIR }}"
-            NODE_ENV="production"
-            PM2_APP_NAME="career-prep-frontend"
-            PORT="${{ secrets.FRONTEND_PORT || 3000 }}"
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-              DEPLOY_BRANCH="${{ github.event.inputs.branch }}"
-            elif [ "${{ github.event_name }}" = "workflow_run" ]; then
-              DEPLOY_BRANCH="${{ github.event.workflow_run.head_branch }}"
-            fi
-            export APP_DIR DEPLOY_BRANCH NODE_ENV PM2_APP_NAME PORT
-            cd "${APP_DIR}"
-            rm -rf node_modules .next || true
-            npm cache clean --force || true
-            df -h .
-            git reset --hard
-            git clean -fd
-            git fetch --all --prune
-            git checkout "${DEPLOY_BRANCH}"
-            git pull --ff-only origin "${DEPLOY_BRANCH}"
-            echo "Current directory: $(pwd)"
-            echo "Current branch: $(git branch --show-current)"
-            echo "Deploying commit: $(git rev-parse --short HEAD)"
-            if [ -f "./deploy/ec2-deploy.sh" ]; then
-              bash "./deploy/ec2-deploy.sh"
-            else
-              echo "deploy/ec2-deploy.sh not found; running inline fallback deploy" >&2
-              ls -la
-              npm ci --include=dev
-              npm run build -- --webpack
-              export NODE_ENV="production"
-              pm2 delete "${PM2_APP_NAME}" >/dev/null 2>&1 || true
-              pm2 start npm --name "${PM2_APP_NAME}" --cwd "${APP_DIR}" -- run start
-              pm2 show "${PM2_APP_NAME}" | sed -n '1,20p'
-              pm2 save
-            fi
+            cd /var/www/frontend
+            tar -xzf deploy.tar.gz
+            npm ci --production
+            pm2 restart frontend || pm2 start npm --name "frontend" -- start
