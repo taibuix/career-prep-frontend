@@ -28,7 +28,7 @@ jobs:
           public \
           package.json \
           package-lock.json \
-          next.config.js
+          next.config.ts
       - name: Upload to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
