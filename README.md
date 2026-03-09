@@ -24,10 +24,9 @@ https://techshop-backend-4g9y.onrender.com/
 This repo now includes:
 - CI workflow: `.github/workflows/ci.yml`
 - CD workflow: `.github/workflows/cd-ec2.yml`
-- Deploy script: `deploy/ec2-deploy.sh`
 
 CI runs on `main` and `dev`.
-CD runs after CI succeeds on `main` or `dev` (or manually via `workflow_dispatch`).
+CD runs after CI succeeds on `main` or `dev` via `workflow_run` (or manually via `workflow_dispatch`).
 
 Required GitHub repository secrets:
 - `EC2_HOST`
