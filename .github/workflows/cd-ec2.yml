@@ -4,93 +4,39 @@ on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
-    branches: [main, dev]
   workflow_dispatch:
-    inputs:
-      branch:
-        description: "Branch to deploy"
-        required: true
-        default: "main"
-        type: choice
-        options:
-          - main
-          - dev
-
 concurrency:
-  group: cd-ec2-${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.event.workflow_run.head_branch }}
+  group: cd-main
   cancel-in-progress: true
-
-jobs:
-  build-and-deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
-    env:
-      DEPLOY_DIR: ${{ secrets.EC2_APP_DIR }}
-      DEPLOY_USER: ${{ secrets.EC2_USER }}
-      DEPLOY_PORT: ${{ secrets.EC2_PORT || '22' }}
-      PM2_APP_NAME: frontend
-      FRONTEND_PORT: ${{ secrets.FRONTEND_PORT || '3000' }}
-
-    steps:
-      - name: Resolve deploy ref
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "DEPLOY_REF=${{ inputs.branch }}" >> "$GITHUB_ENV"
-          else
-            echo "DEPLOY_REF=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_ENV"
-          fi
-
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.DEPLOY_REF }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Next.js
-        run: npm run build -- --webpack
-
-      - name: Create deployment package
-        run: |
-          tar -czf deploy.tar.gz \
-          .next \
-          public \
-          package.json \
-          package-lock.json \
-          next.config.ts
-      - name: Upload to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          port: ${{ env.DEPLOY_PORT }}
-          username: ${{ env.DEPLOY_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          source: "deploy.tar.gz"
-          target: ${{ env.DEPLOY_DIR }}
-
-      - name: Deploy on server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          port: ${{ env.DEPLOY_PORT }}
-          username: ${{ env.DEPLOY_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            cd "${{ env.DEPLOY_DIR }}"
-            tar -xzf deploy.tar.gz
-            rm deploy.tar.gz
-            npm ci --omit=dev
-            if pm2 describe "${{ env.PM2_APP_NAME }}" > /dev/null 2>&1; then
-              pm2 restart "${{ env.PM2_APP_NAME }}" --update-env
-            else
-              PORT="${{ env.FRONTEND_PORT }}" pm2 start npm --name "${{ env.PM2_APP_NAME }}" -- start
-            fi
-            pm2 save
+jobs: 
+    deploy:
+        if: >
+            github.event_name == 'workflow_dispatch' ||
+            (github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.head_branch == 'main')
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy to EC2 over SSH
+              uses: appleboy/ssh-action@v1.2.0
+              with:
+                host: ${{ secrets.EC2_HOST }}
+                username: ${{ secrets.EC2_USER }}
+                key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+                port: ${{ secrets.EC2_PORT || 22 }}
+                script_stop: true
+                script: |
+                  set -euo pipefail
+                  echo "Deploy dir: ${{ secrets.EC2_APP_DIR }}"
+                  cd "${{ secrets.EC2_APP_DIR }}"
+                  pwd
+                  git fetch --all
+                  git checkout main
+                  git pull origin main
+                  npm ci
+                  npm run build
+                  if pm2 describe frontend > /dev/null 2>&1; then
+                    pm2 restart frontend --update-env
+                  else
+                    pm2 start npm --name frontend -- start
+                  fi
+                  pm2 save
