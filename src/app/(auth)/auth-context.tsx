@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { getCurrentUser, logoutUser } from "./api";
+import { getCurrentUser, logoutUser, updateCurrentUser } from "./api";
 
 interface User {
     id: string;
@@ -13,6 +13,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     logout: () => Promise<void>;
+    updateProfile: (data: Pick<User, "name" | "email">) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -41,8 +42,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
     };
 
+    const updateProfile = async (data: Pick<User, "name" | "email">) => {
+        const response = await updateCurrentUser(data);
+        setUser(response.user);
+        return response.user;
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, logout }}>
+        <AuthContext.Provider value={{ user, loading, logout, updateProfile }}>
             {children}
         </AuthContext.Provider>
     );
