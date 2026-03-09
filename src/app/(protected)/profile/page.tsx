@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Briefcase, Mail, Save, User2 } from "lucide-react";
 
 import { useAuth } from "@/app/(auth)/auth-context";
@@ -30,6 +30,23 @@ const defaultProfilePrefs: ProfilePrefs = {
     bio: "",
 };
 
+const getStoredProfilePrefs = (): ProfilePrefs => {
+    if (typeof window === "undefined") {
+        return defaultProfilePrefs;
+    }
+
+    try {
+        const stored = window.localStorage.getItem(PROFILE_PREFS_STORAGE_KEY);
+        if (!stored) {
+            return defaultProfilePrefs;
+        }
+
+        return { ...defaultProfilePrefs, ...(JSON.parse(stored) as Partial<ProfilePrefs>) };
+    } catch {
+        return defaultProfilePrefs;
+    }
+};
+
 const formatSlugLabel = (value: string) =>
     value
         .split("-")
@@ -37,69 +54,32 @@ const formatSlugLabel = (value: string) =>
         .join(" ");
 
 export default function ProfilePage() {
-    const { user, loading, updateProfile } = useAuth();
+    const { user, updateProfile } = useAuth();
 
-    const [initialized, setInitialized] = useState(false);
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [targetRole, setTargetRole] = useState(defaultProfilePrefs.targetRole);
-    const [experienceLevel, setExperienceLevel] = useState(defaultProfilePrefs.experienceLevel);
-    const [bio, setBio] = useState(defaultProfilePrefs.bio);
-    const [initialSnapshot, setInitialSnapshot] = useState<null | {
-        name: string;
-        email: string;
-        targetRole: string;
-        experienceLevel: string;
-        bio: string;
-    }>(null);
+    const [savedPrefs, setSavedPrefs] = useState<ProfilePrefs>(getStoredProfilePrefs);
+    const [nameDraft, setNameDraft] = useState<string | null>(null);
+    const [emailDraft, setEmailDraft] = useState<string | null>(null);
+    const [targetRole, setTargetRole] = useState(savedPrefs.targetRole);
+    const [experienceLevel, setExperienceLevel] = useState(savedPrefs.experienceLevel);
+    const [bio, setBio] = useState(savedPrefs.bio);
     const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (loading || initialized) {
-            return;
-        }
-
-        let localPrefs = defaultProfilePrefs;
-        try {
-            const stored = window.localStorage.getItem(PROFILE_PREFS_STORAGE_KEY);
-            if (stored) {
-                localPrefs = { ...defaultProfilePrefs, ...(JSON.parse(stored) as Partial<ProfilePrefs>) };
-            }
-        } catch {
-            localPrefs = defaultProfilePrefs;
-        }
-
-        const nextState = {
-            name: user?.name ?? "",
-            email: user?.email ?? "",
-            targetRole: localPrefs.targetRole,
-            experienceLevel: localPrefs.experienceLevel,
-            bio: localPrefs.bio,
-        };
-
-        setName(nextState.name);
-        setEmail(nextState.email);
-        setTargetRole(nextState.targetRole);
-        setExperienceLevel(nextState.experienceLevel);
-        setBio(nextState.bio);
-        setInitialSnapshot(nextState);
-        setInitialized(true);
-    }, [initialized, loading, user]);
+    const name = nameDraft ?? user?.name ?? "";
+    const email = emailDraft ?? user?.email ?? "";
 
     const isDirty = useMemo(() => {
-        if (!initialSnapshot) {
-            return false;
-        }
+        const baselineName = user?.name ?? "";
+        const baselineEmail = user?.email ?? "";
 
         return (
-            name.trim() !== initialSnapshot.name ||
-            email.trim() !== initialSnapshot.email ||
-            targetRole !== initialSnapshot.targetRole ||
-            experienceLevel !== initialSnapshot.experienceLevel ||
-            bio.trim() !== initialSnapshot.bio
+            name.trim() !== baselineName ||
+            email.trim() !== baselineEmail ||
+            targetRole !== savedPrefs.targetRole ||
+            experienceLevel !== savedPrefs.experienceLevel ||
+            bio.trim() !== savedPrefs.bio
         );
-    }, [bio, email, experienceLevel, initialSnapshot, name, targetRole]);
+    }, [bio, email, experienceLevel, name, savedPrefs.bio, savedPrefs.experienceLevel, savedPrefs.targetRole, targetRole, user?.email, user?.name]);
 
     const onFieldChange = (update: () => void) => {
         update();
@@ -139,17 +119,15 @@ export default function ProfilePage() {
             window.localStorage.setItem(PROFILE_PREFS_STORAGE_KEY, JSON.stringify(profilePrefs));
 
             const nextSnapshot = {
-                name: updatedUser.name,
-                email: updatedUser.email,
                 targetRole: profilePrefs.targetRole,
                 experienceLevel: profilePrefs.experienceLevel,
                 bio: profilePrefs.bio,
             };
 
-            setName(updatedUser.name);
-            setEmail(updatedUser.email);
+            setNameDraft(updatedUser.name);
+            setEmailDraft(updatedUser.email);
             setBio(profilePrefs.bio);
-            setInitialSnapshot(nextSnapshot);
+            setSavedPrefs(nextSnapshot);
             setSaveStatus("saved");
         } catch (error: any) {
             const message = error?.response?.data?.message ?? "Unable to save profile changes.";
@@ -188,7 +166,7 @@ export default function ProfilePage() {
                                 <Input
                                     className="pl-9"
                                     value={name}
-                                    onChange={(event) => onFieldChange(() => setName(event.target.value))}
+                                    onChange={(event) => onFieldChange(() => setNameDraft(event.target.value))}
                                     placeholder="Your full name"
                                 />
                             </div>
@@ -201,7 +179,7 @@ export default function ProfilePage() {
                                     className="pl-9"
                                     type="email"
                                     value={email}
-                                    onChange={(event) => onFieldChange(() => setEmail(event.target.value))}
+                                    onChange={(event) => onFieldChange(() => setEmailDraft(event.target.value))}
                                     placeholder="name@example.com"
                                 />
                             </div>
@@ -251,7 +229,7 @@ export default function ProfilePage() {
                             />
                         </div>
                         <div className="flex items-center gap-3">
-                            <Button onClick={onSave} disabled={!initialized || !isDirty || saveStatus === "saving"}>
+                            <Button onClick={onSave} disabled={!isDirty || saveStatus === "saving"}>
                                 <Save className="h-4 w-4" />
                                 {saveStatus === "saving" ? "Saving..." : "Save Profile"}
                             </Button>
