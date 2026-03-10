@@ -46,9 +46,11 @@ jobs:
           script: |
             cd /var/www/frontend
 
-            rm -rf .next standalone public
+            rm -rf .next public
 
             tar -xzf deploy.tar.gz
             rm deploy.tar.gz
+            pm2 delete frontend 2>/dev/null
 
-            pm2 restart frontend || pm2 start standalone/server.js --name frontend
+            pm2 start .next/standalone/server.js --name frontend --cwd /var/www/frontend
+            pm2 save
