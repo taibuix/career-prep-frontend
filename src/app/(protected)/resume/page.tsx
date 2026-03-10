@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AxiosError } from "axios";
 import {
     BadgeCheck,
     Download,
@@ -22,6 +23,15 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/app/(auth)/auth-context";
+import {
+    createResume,
+    createResumeSection,
+    getResumeById,
+    getUserResumes,
+    updateResumeSection,
+    type ResumeSection,
+} from "./api";
 
 const sectionChecklist = [
     "Strong summary tailored to target role",
@@ -40,12 +50,24 @@ const keywordSuggestions = [
 ];
 
 export default function ResumePage() {
-    const [fullName, setFullName] = useState("Tai Nguyen");
+    const { user } = useAuth();
+
+    const [fullName, setFullName] = useState("");
     const [targetRole, setTargetRole] = useState("Frontend Engineer");
     const [targetCompany, setTargetCompany] = useState("");
     const [template, setTemplate] = useState("modern");
     const [summary, setSummary] = useState("");
     const [experience, setExperience] = useState("");
+
+    const [resumeId, setResumeId] = useState<string | null>(null);
+    const [setupSectionId, setSetupSectionId] = useState<string | null>(null);
+    const [summarySectionId, setSummarySectionId] = useState<string | null>(null);
+    const [experienceSectionId, setExperienceSectionId] = useState<string | null>(null);
+
+    const [loadingResume, setLoadingResume] = useState(true);
+    const [savingResume, setSavingResume] = useState(false);
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const summaryWords = useMemo(() => {
         const value = summary.trim();
@@ -59,6 +81,199 @@ export default function ResumePage() {
             .map((line) => line.trim())
             .filter(Boolean).length;
     }, [experience]);
+
+    const getApiErrorMessage = (error: unknown, fallback: string): string => {
+        if (error instanceof AxiosError) {
+            const responseMessage = error.response?.data?.message;
+            if (typeof responseMessage === "string" && responseMessage.trim()) {
+                return responseMessage;
+            }
+        }
+        return fallback;
+    };
+
+    const isObjectRecord = (value: unknown): value is Record<string, unknown> => {
+        return typeof value === "object" && value !== null;
+    };
+
+    const readTextContent = (value: unknown): string => {
+        if (typeof value === "string") {
+            return value;
+        }
+
+        if (isObjectRecord(value) && typeof value.text === "string") {
+            return value.text;
+        }
+
+        return "";
+    };
+
+    const readSetupContent = (value: unknown): Partial<{
+        fullName: string;
+        targetRole: string;
+        targetCompany: string;
+        template: string;
+    }> => {
+        if (!isObjectRecord(value)) {
+            return {};
+        }
+
+        const setup = value.kind === "SETUP" && isObjectRecord(value.payload)
+            ? value.payload
+            : value;
+
+        return {
+            fullName: typeof setup.fullName === "string" ? setup.fullName : undefined,
+            targetRole: typeof setup.targetRole === "string" ? setup.targetRole : undefined,
+            targetCompany: typeof setup.targetCompany === "string" ? setup.targetCompany : undefined,
+            template: typeof setup.template === "string" ? setup.template : undefined,
+        };
+    };
+
+    const buildResumeTitle = (): string => {
+        const role = targetRole.trim() || "Resume";
+        const company = targetCompany.trim();
+        return company ? `${role} - ${company}` : role;
+    };
+
+    const upsertSection = async (
+        activeResumeId: string,
+        existingSectionId: string | null,
+        payload: {
+            type: "EDUCATION" | "EXPERIENCE" | "SKILLS" | "PROJECT" | "OTHER";
+            content: unknown;
+            order: number;
+        }
+    ): Promise<ResumeSection> => {
+        if (existingSectionId) {
+            return updateResumeSection(existingSectionId, { content: payload.content });
+        }
+
+        return createResumeSection(activeResumeId, payload);
+    };
+
+    useEffect(() => {
+        if (!fullName.trim() && user?.name) {
+            setFullName(user.name);
+        }
+    }, [fullName, user?.name]);
+
+    useEffect(() => {
+        const loadResume = async () => {
+            setLoadingResume(true);
+            setErrorMessage(null);
+            setStatusMessage(null);
+
+            try {
+                const resumes = await getUserResumes();
+                if (!resumes.length) {
+                    setStatusMessage("No saved resume yet. Start editing, then click Save Resume.");
+                    return;
+                }
+
+                const latestResume = resumes[0];
+                const detail = await getResumeById(latestResume.id);
+
+                setResumeId(detail.id);
+
+                const sections = detail.resumeSections;
+                const setupSection = sections.find((section) => {
+                    if (section.type !== "OTHER") return false;
+                    if (!isObjectRecord(section.content)) return false;
+                    return section.content.kind === "SETUP";
+                });
+                const summarySection = sections.find((section) => {
+                    if (section.type !== "OTHER") return false;
+                    if (!isObjectRecord(section.content)) return false;
+                    return section.content.kind === "SUMMARY";
+                });
+                const experienceSection = sections.find((section) => section.type === "EXPERIENCE");
+
+                if (setupSection) {
+                    const setup = readSetupContent(setupSection.content);
+                    if (setup.fullName) setFullName(setup.fullName);
+                    if (setup.targetRole) setTargetRole(setup.targetRole);
+                    if (typeof setup.targetCompany === "string") setTargetCompany(setup.targetCompany);
+                    if (setup.template) setTemplate(setup.template);
+                    setSetupSectionId(setupSection.id);
+                }
+
+                if (summarySection) {
+                    setSummary(readTextContent(summarySection.content));
+                    setSummarySectionId(summarySection.id);
+                }
+
+                if (experienceSection) {
+                    setExperience(readTextContent(experienceSection.content));
+                    setExperienceSectionId(experienceSection.id);
+                }
+
+                setStatusMessage("Loaded your latest saved resume.");
+            } catch (error) {
+                setErrorMessage(getApiErrorMessage(error, "Could not load resume data."));
+            } finally {
+                setLoadingResume(false);
+            }
+        };
+
+        void loadResume();
+    }, []);
+
+    const handleSaveResume = async () => {
+        setSavingResume(true);
+        setErrorMessage(null);
+        setStatusMessage(null);
+
+        try {
+            let activeResumeId = resumeId;
+
+            if (!activeResumeId) {
+                const created = await createResume({ title: buildResumeTitle() });
+                activeResumeId = created.id;
+                setResumeId(created.id);
+            }
+
+            const [nextSetupSection, nextSummarySection, nextExperienceSection] = await Promise.all([
+                upsertSection(activeResumeId, setupSectionId, {
+                    type: "OTHER",
+                    order: 1,
+                    content: {
+                        kind: "SETUP",
+                        payload: {
+                            fullName: fullName.trim(),
+                            targetRole: targetRole.trim(),
+                            targetCompany: targetCompany.trim(),
+                            template,
+                        },
+                    },
+                }),
+                upsertSection(activeResumeId, summarySectionId, {
+                    type: "OTHER",
+                    order: 2,
+                    content: {
+                        kind: "SUMMARY",
+                        text: summary.trim(),
+                    },
+                }),
+                upsertSection(activeResumeId, experienceSectionId, {
+                    type: "EXPERIENCE",
+                    order: 3,
+                    content: {
+                        text: experience.trim(),
+                    },
+                }),
+            ]);
+
+            setSetupSectionId(nextSetupSection.id);
+            setSummarySectionId(nextSummarySection.id);
+            setExperienceSectionId(nextExperienceSection.id);
+            setStatusMessage("Resume saved successfully.");
+        } catch (error) {
+            setErrorMessage(getApiErrorMessage(error, "Could not save resume. Please try again."));
+        } finally {
+            setSavingResume(false);
+        }
+    };
 
     return (
         <div className="space-y-6 p-4 md:p-6">
@@ -82,12 +297,17 @@ export default function ResumePage() {
                             <WandSparkles className="h-4 w-4" />
                             Improve Content
                         </Button>
-                        <Button className="flex-1 md:flex-none">
+                        <Button className="flex-1 md:flex-none" onClick={handleSaveResume} disabled={savingResume || loadingResume}>
+                            {savingResume ? "Saving..." : "Save Resume"}
+                        </Button>
+                        <Button className="flex-1 md:flex-none" disabled>
                             <Download className="h-4 w-4" />
                             Export PDF
                         </Button>
                     </div>
                 </div>
+                {statusMessage ? <p className="mt-3 text-sm text-emerald-700">{statusMessage}</p> : null}
+                {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
             </section>
 
             <section className="grid gap-4 lg:grid-cols-[380px_1fr]">
@@ -186,7 +406,9 @@ export default function ResumePage() {
                             />
                             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                                 <span>{experienceBullets} bullets drafted</span>
-                                <Button disabled={!experience.trim()}>Save Section</Button>
+                                <Button onClick={handleSaveResume} disabled={savingResume || loadingResume}>
+                                    {savingResume ? "Saving..." : "Save Section"}
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>

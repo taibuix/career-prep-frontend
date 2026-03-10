@@ -40,3 +40,4 @@ jobs:
                     pm2 start npm --name frontend -- start
                   fi
                   pm2 save
+                    
