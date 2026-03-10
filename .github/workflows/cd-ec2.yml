@@ -50,6 +50,10 @@ jobs:
 
             tar -xzf deploy.tar.gz
             rm deploy.tar.gz
+
+            cp -r .next/static .next/standalone/.next/
+            cp -r public .next/standalone/
+            
             pm2 delete frontend 2>/dev/null
 
             pm2 start .next/standalone/server.js --name frontend --cwd /var/www/frontend
