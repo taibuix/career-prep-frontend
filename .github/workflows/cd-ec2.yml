@@ -21,6 +21,8 @@ jobs:
         run: npm ci
       - name: Build Next.js
         run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://3.144.30.109:5000/api
       - name: Create deployment package
         run: |
           tar -czf deploy.tar.gz \
