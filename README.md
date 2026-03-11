@@ -4,7 +4,7 @@ Production-ready frontend for the Career Prep platform, built with Next.js App R
 
 ## Links
 
-- Live app: `https://career-prep-frontend.vercel.app/`
+- Live app: `http://3.144.30.109:3000`
 - Backend repository: `https://github.com/buitai97/career-prep-backend`
 
 ## Core Features
