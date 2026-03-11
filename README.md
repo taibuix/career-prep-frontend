@@ -1,42 +1,104 @@
-# 🚀 Career Prep Frontend
+# Career Prep Frontend
 
-Frontend for the AI-powered Career Preparation Platform.
-https://github.com/buitai97/career-prep-backend
+Production-ready frontend for the Career Prep platform, built with Next.js App Router. This application helps users prepare for job search success through guided interview practice, resume building, and progress tracking.
+
+## Links
+
+- Live app: `https://career-prep-frontend.vercel.app/`
+- Backend repository: `https://github.com/buitai97/career-prep-backend`
+
+## Core Features
+
+- Authentication flow: register, login, session-aware protected routes
+- Dashboard overview with prep progress and weekly tasks
+- AI interview practice with session analytics
+- Resume builder with structured sections and save/load workflow
+- Profile management for personal details
 
 ## Tech Stack
 
-- Next.js
+- Next.js 16 (App Router)
+- React 19
 - TypeScript
-- Tailwind CSS
-- ShadCN UI
-- Axios
+- Tailwind CSS 4
+- shadcn/ui components
+- Axios for API communication
 
-## Live Demo
+## Prerequisites
 
-https://career-prep-frontend.vercel.app/
+- Node.js 20+
+- npm 10+
+- A running backend API service
 
-## Backend API
+## Getting Started
 
-https://techshop-backend-4g9y.onrender.com/
+1. Clone the repository.
+2. Install dependencies.
+3. Configure environment variables.
+4. Start the development server.
 
-## CI/CD (EC2)
+```bash
+npm install
+npm run dev
+```
 
-This repo now includes:
+App runs at `http://localhost:3000` by default.
+
+## Environment Variables
+
+Create a `.env.local` file in the project root:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+```
+
+`NEXT_PUBLIC_API_URL` is used by `src/lib/axios.ts` as the base URL for all frontend API requests.
+
+## Available Scripts
+
+- `npm run dev`: start local development server
+- `npm run build`: create production build
+- `npm run start`: run production server
+- `npm run lint`: run ESLint checks
+
+## Project Structure
+
+```text
+src/
+	app/
+		(auth)/         # login/register flows
+		(protected)/    # authenticated app areas
+			dashboard/
+			interview/
+			profile/
+			resume/
+	components/
+		ui/             # shared shadcn-based UI primitives
+		layout/         # app shell and sidebar layout
+	lib/
+		axios.ts        # API client configured with NEXT_PUBLIC_API_URL
+```
+
+## Deployment Notes
+
 - CI workflow: `.github/workflows/ci.yml`
-- CD workflow: `.github/workflows/cd-ec2.yml`
+- EC2 CD workflow: `.github/workflows/cd-ec2.yml`
 
-CI runs on `main` and `dev`.
-CD runs after CI succeeds on `main` or `dev` via `workflow_run` (or manually via `workflow_dispatch`).
+Required repository secrets for EC2 deployment:
 
-Required GitHub repository secrets:
 - `EC2_HOST`
-- `EC2_PORT` (usually `22`)
+- `EC2_PORT`
 - `EC2_USER`
 - `EC2_SSH_PRIVATE_KEY`
-- `EC2_APP_DIR` (example: `/home/ubuntu/career-prep-frontend`)
+- `EC2_APP_DIR`
 - `FRONTEND_PORT` (optional, default `3000`)
 
-EC2 prerequisites:
-- Node.js + npm installed
+Server prerequisites:
+
+- Node.js and npm installed
 - PM2 installed
-- Frontend repository already cloned at `EC2_APP_DIR`
+- Repository cloned at `EC2_APP_DIR`
+
+## License
+
+This project is for portfolio and educational use unless otherwise specified.
