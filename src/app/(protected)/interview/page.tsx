@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
     createInterviewSession,
     getInterviewAnalytics,
+    type InterviewAnswerFeedbackResponse,
     type InterviewAnalytics,
     type InterviewQuestion,
     type InterviewType,
@@ -73,6 +74,10 @@ export default function InterviewPage() {
     const [submittedQuestionIds, setSubmittedQuestionIds] = useState<Set<string>>(new Set());
 
     const [answer, setAnswer] = useState("");
+    const [lastFeedback, setLastFeedback] = useState<
+        (InterviewAnswerFeedbackResponse & { question: string; answer: string }) | null
+    >(null);
+    const [sessionOverallFeedback, setSessionOverallFeedback] = useState<InterviewAnswerFeedbackResponse["overallFeedback"]>(null);
     const [analytics, setAnalytics] = useState<InterviewAnalytics>(emptyAnalytics);
 
     const [loadingAnalytics, setLoadingAnalytics] = useState(true);
@@ -116,6 +121,8 @@ export default function InterviewPage() {
         setCreatingSession(true);
         setError(null);
         setSuccess(null);
+        setLastFeedback(null);
+        setSessionOverallFeedback(null);
 
         try {
             const response = await createInterviewSession({
@@ -149,7 +156,13 @@ export default function InterviewPage() {
         setSuccess(null);
 
         try {
-            await submitInterviewAnswer(currentQuestion.id, answer.trim());
+            const submittedAnswer = answer.trim();
+            const feedbackResponse = await submitInterviewAnswer(currentQuestion.id, submittedAnswer);
+            setLastFeedback({
+                ...feedbackResponse,
+                question: currentQuestion.question,
+                answer: submittedAnswer,
+            });
 
             setSubmittedQuestionIds((previous) => {
                 const next = new Set(previous);
@@ -158,7 +171,8 @@ export default function InterviewPage() {
             });
 
             if (isLastQuestion) {
-                setSuccess("Interview session complete. Analytics refreshed.");
+                setSuccess(`Interview session complete. Last score: ${feedbackResponse.feedback.score.toFixed(1)}.`);
+                setSessionOverallFeedback(feedbackResponse.overallFeedback);
                 setQuestions([]);
                 setCurrentQuestionIndex(0);
                 setAnswer("");
@@ -169,7 +183,7 @@ export default function InterviewPage() {
 
             setCurrentQuestionIndex((index) => index + 1);
             setAnswer("");
-            setSuccess("Answer submitted. Moving to the next question.");
+            setSuccess(`Score: ${feedbackResponse.feedback.score.toFixed(1)}. Feedback added below.`);
         } catch (error) {
             setError(getApiErrorMessage(error, "Could not submit your answer. Please retry."));
         } finally {
@@ -307,6 +321,41 @@ export default function InterviewPage() {
                                     <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Sample question</p>
                                     <p className="text-foreground">Tell me about a time you had to deliver a project under a tight deadline. What was your approach and what was the outcome?</p>
                                 </div>
+                                {sessionOverallFeedback ? (
+                                    <div className="space-y-3 rounded-xl border bg-emerald-50/70 p-4">
+                                        <p className="text-sm font-semibold text-emerald-800">Session Wrap-Up Feedback</p>
+                                        <p className="text-sm text-emerald-700">
+                                            Overall score: {sessionOverallFeedback.overallScore.toFixed(1)}
+                                        </p>
+                                        <p className="text-sm text-slate-700">{sessionOverallFeedback.summary}</p>
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-medium uppercase tracking-wide text-slate-600">Top strengths</p>
+                                            <ul className="space-y-1 text-sm text-slate-700">
+                                                {sessionOverallFeedback.topStrengths.length ? sessionOverallFeedback.topStrengths.map((item) => (
+                                                    <li key={item} className="flex items-start gap-2">
+                                                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                                                        {item}
+                                                    </li>
+                                                )) : (
+                                                    <li>No strengths captured yet.</li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-medium uppercase tracking-wide text-slate-600">Focus areas</p>
+                                            <ul className="space-y-1 text-sm text-slate-700">
+                                                {sessionOverallFeedback.focusAreas.length ? sessionOverallFeedback.focusAreas.map((item) => (
+                                                    <li key={item} className="flex items-start gap-2">
+                                                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-600" />
+                                                        {item}
+                                                    </li>
+                                                )) : (
+                                                    <li>No improvement areas captured yet.</li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                ) : null}
                             </CardContent>
                         </Card>
                     ) : (
@@ -366,6 +415,33 @@ export default function InterviewPage() {
                                     {error ? <p className="text-sm text-red-600">{error}</p> : null}
                                 </CardContent>
                             </Card>
+                            {lastFeedback ? (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Latest AI Feedback</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3 text-sm">
+                                        <p className="rounded-md border bg-muted/30 px-3 py-2">
+                                            <span className="font-medium">Question:</span> {lastFeedback.question}
+                                        </p>
+                                        <div className="rounded-md border bg-sky-50 px-3 py-2">
+                                            <p className="font-medium text-sky-800">Your answer</p>
+                                            <p className="mt-1 whitespace-pre-wrap text-slate-700">{lastFeedback.answer}</p>
+                                        </div>
+                                        <p className="rounded-md border bg-emerald-50 px-3 py-2 text-emerald-700">
+                                            <span className="font-medium">Score:</span> {lastFeedback.feedback.score.toFixed(1)}
+                                        </p>
+                                        <div className="rounded-md border px-3 py-2">
+                                            <p className="font-medium">Strengths</p>
+                                            <p className="mt-1 text-muted-foreground">{lastFeedback.feedback.strengths || "No strengths provided."}</p>
+                                        </div>
+                                        <div className="rounded-md border px-3 py-2">
+                                            <p className="font-medium">Improvements</p>
+                                            <p className="mt-1 text-muted-foreground">{lastFeedback.feedback.improvements || "No improvements provided."}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ) : null}
                         </>
                     )}
                 </div>

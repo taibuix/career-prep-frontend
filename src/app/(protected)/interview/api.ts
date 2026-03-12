@@ -37,6 +37,23 @@ interface CreateInterviewSessionResponse {
     session: InterviewSession;
 }
 
+export interface InterviewAnswerFeedbackResponse {
+    answerId: string;
+    questionId: string;
+    feedback: {
+        score: number;
+        strengths: string;
+        improvements: string;
+    };
+    sessionCompleted: boolean;
+    overallFeedback: {
+        overallScore: number;
+        summary: string;
+        topStrengths: string[];
+        focusAreas: string[];
+    } | null;
+}
+
 export const createInterviewSession = async (
     payload: CreateInterviewSessionPayload
 ): Promise<CreateInterviewSessionResponse> => {
@@ -47,8 +64,9 @@ export const createInterviewSession = async (
 export const submitInterviewAnswer = async (
     questionId: string,
     answer: string
-): Promise<void> => {
-    await api.post(`/interviews/questions/${questionId}/answer`, { answer });
+): Promise<InterviewAnswerFeedbackResponse> => {
+    const response = await api.post(`/interviews/questions/${questionId}/answer`, { answer });
+    return response.data;
 };
 
 export const getInterviewAnalytics = async (): Promise<InterviewAnalytics> => {
