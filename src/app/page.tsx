@@ -36,8 +36,8 @@ const outcomes = [
 
 export default function HomePage() {
     return (
-        <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(34,197,94,0.25),transparent_38%),radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.2),transparent_34%),linear-gradient(180deg,#020617_0%,#0f172a_42%,#111827_100%)]" />
+        <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 dark:bg-background dark:text-foreground">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(34,197,94,0.25),transparent_38%),radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.2),transparent_34%),linear-gradient(180deg,#020617_0%,#0f172a_42%,#111827_100%)] dark:bg-[radial-gradient(circle_at_20%_10%,rgba(34,197,94,0.16),transparent_38%),radial-gradient(circle_at_80%_0%,rgba(56,189,248,0.14),transparent_34%)]" />
             <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 py-6 md:px-8 md:py-8">
                 <header className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900/60 px-4 py-3 backdrop-blur">
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-200">

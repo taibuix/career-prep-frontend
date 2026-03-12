@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -58,9 +58,9 @@ export default function RegisterPage() {
     };
 
     return (
-        <Card className="w-full rounded-xl border-0 shadow-none">
+        <Card className="w-full rounded-xl border-0 bg-transparent shadow-none">
             <CardHeader className="pb-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Get started</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Get started</p>
                 <CardTitle className="text-3xl tracking-tight">Create Account</CardTitle>
                 <p className="text-sm text-muted-foreground">Set up your prep workspace in under a minute.</p>
             </CardHeader>
@@ -70,7 +70,7 @@ export default function RegisterPage() {
                         <label className="text-sm font-medium">Full Name</label>
                         <Input
                             placeholder="Jane Doe"
-                            className="h-12 text-base"
+                            className="h-12 text-base dark:border-border dark:bg-background/70"
                             autoComplete="name"
                             {...register("name")}
                         />
@@ -86,7 +86,7 @@ export default function RegisterPage() {
                         <Input
                             placeholder="name@example.com"
                             type="email"
-                            className="h-12 text-base"
+                            className="h-12 text-base dark:border-border dark:bg-background/70"
                             autoComplete="email"
                             {...register("email")}
                         />
@@ -103,7 +103,7 @@ export default function RegisterPage() {
                             <Input
                                 placeholder="At least 6 characters"
                                 type={showPassword ? "text" : "password"}
-                                className="h-12 pr-11 text-base"
+                                className="h-12 pr-11 text-base dark:border-border dark:bg-background/70"
                                 autoComplete="new-password"
                                 {...register("password")}
                             />
@@ -129,7 +129,7 @@ export default function RegisterPage() {
                             <Input
                                 placeholder="Re-enter password"
                                 type={showConfirmPassword ? "text" : "password"}
-                                className="h-12 pr-11 text-base"
+                                className="h-12 pr-11 text-base dark:border-border dark:bg-background/70"
                                 autoComplete="new-password"
                                 {...register("confirmPassword")}
                             />
@@ -150,7 +150,7 @@ export default function RegisterPage() {
                     </div>
 
                     {serverError && (
-                        <p className="text-center text-sm text-red-500">
+                        <p className="rounded-md bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">
                             {serverError}
                         </p>
                     )}
@@ -173,3 +173,4 @@ export default function RegisterPage() {
         </Card>
     );
 }
+

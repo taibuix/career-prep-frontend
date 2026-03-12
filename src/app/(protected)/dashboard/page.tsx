@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ArrowRight, Briefcase, CalendarCheck2, FileText, Flame, Target, TrendingUp, Trophy } from "lucide-react";
@@ -21,20 +21,36 @@ const progress = [
 ];
 
 const recentActivity = [
-    { label: "Technical Interview", sub: "Score: 87 · 42 min ago", accent: "border-l-sky-400 bg-sky-50/60" },
-    { label: "Resume Updated", sub: "Summary section · 2 days ago", accent: "border-l-emerald-400 bg-emerald-50/60" },
-    { label: "Behavioral Interview", sub: "Score: 79 · 4 days ago", accent: "border-l-violet-400 bg-violet-50/60" },
-    { label: "Job Application", sub: "Stripe · Applied 5 days ago", accent: "border-l-amber-400 bg-amber-50/60" },
+    {
+        label: "Technical Interview",
+        sub: "Score: 87 - 42 min ago",
+        accent: "border-l-sky-400 bg-sky-50/60 dark:border-l-sky-500 dark:bg-sky-950/35",
+    },
+    {
+        label: "Resume Updated",
+        sub: "Summary section - 2 days ago",
+        accent: "border-l-emerald-400 bg-emerald-50/60 dark:border-l-emerald-500 dark:bg-emerald-950/35",
+    },
+    {
+        label: "Behavioral Interview",
+        sub: "Score: 79 - 4 days ago",
+        accent: "border-l-violet-400 bg-violet-50/60 dark:border-l-violet-500 dark:bg-violet-950/35",
+    },
+    {
+        label: "Job Application",
+        sub: "Stripe - Applied 5 days ago",
+        accent: "border-l-amber-400 bg-amber-50/60 dark:border-l-amber-500 dark:bg-amber-950/35",
+    },
 ];
 
 export default function DashBoardPage() {
     return (
         <div className="mx-auto w-full max-w-7xl space-y-5 px-4 py-4 md:px-6 md:py-5">
             {/* Hero */}
-            <section className="rounded-2xl border bg-gradient-to-r from-sky-50 to-blue-100 p-4 md:p-5">
+            <section className="rounded-2xl border bg-muted/40 p-4 md:p-5">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="space-y-2">
-                        <p className="text-xs font-medium uppercase tracking-wide text-sky-700">
+                        <p className="text-xs font-medium uppercase tracking-wide text-sky-700 dark:text-sky-300">
                             Career Command Center
                         </p>
                         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
@@ -44,10 +60,10 @@ export default function DashBoardPage() {
                             Track your interview, resume, and application progress in one place.
                         </p>
                         <div className="flex flex-wrap gap-3 pt-1">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-3 py-1 text-sm text-amber-600">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-3 py-1 text-sm text-amber-600 dark:border-white/20 dark:bg-white/10 dark:text-amber-300">
                                 <Flame className="h-3.5 w-3.5" /> 7-day streak
                             </span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-3 py-1 text-sm text-sky-600">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-3 py-1 text-sm text-sky-600 dark:border-white/20 dark:bg-white/10 dark:text-sky-300">
                                 <TrendingUp className="h-3.5 w-3.5" /> +12% score improvement
                             </span>
                         </div>
@@ -74,7 +90,7 @@ export default function DashBoardPage() {
                     <CardContent className="space-y-3">
                         <div>
                             <p className="text-3xl font-semibold">3</p>
-                            <p className="text-xs text-muted-foreground">1 completed · 2 in progress</p>
+                            <p className="text-xs text-muted-foreground">1 completed - 2 in progress</p>
                         </div>
                         <div className="h-1.5 overflow-hidden rounded-full bg-sky-100">
                             <div className="h-full w-1/3 rounded-full bg-sky-500" />
@@ -166,7 +182,7 @@ export default function DashBoardPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                             <CalendarCheck2 className="h-4 w-4 text-sky-600" />
-                            This Week’s Plan
+                            This Week&apos;s Plan
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -234,15 +250,15 @@ export default function DashBoardPage() {
 
             {/* Recent Activity */}
             <section>
-                <h2 className="mb-3 text-sm font-semibold">Recent Activity</h2>
+                <h2 className="mb-3 text-sm font-semibold text-foreground">Recent Activity</h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {recentActivity.map((item) => (
                         <div
                             key={item.label}
-                            className={cn("rounded-xl border border-l-4 p-4", item.accent)}
+                            className={cn("rounded-xl border border-l-4 p-4 shadow-sm dark:border-white/10", item.accent)}
                         >
-                            <p className="text-sm font-medium">{item.label}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{item.sub}</p>
+                            <p className="text-sm font-medium text-foreground">{item.label}</p>
+                            <p className="mt-1 text-xs text-muted-foreground dark:text-slate-300">{item.sub}</p>
                         </div>
                     ))}
                 </div>
@@ -250,3 +266,4 @@ export default function DashBoardPage() {
         </div>
     );
 }
+

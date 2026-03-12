@@ -138,9 +138,9 @@ export default function ProfilePage() {
 
     return (
         <div className="mx-auto w-full max-w-7xl space-y-5 px-4 py-4 md:px-6 md:py-5">
-            <section className="rounded-2xl border bg-gradient-to-r from-amber-50 to-rose-50 p-4 md:p-5">
+            <section className="rounded-2xl border bg-muted/40 p-4 md:p-5">
                 <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-amber-700">
+                    <p className="text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">
                         Profile Settings
                     </p>
                     <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">

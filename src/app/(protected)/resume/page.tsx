@@ -277,10 +277,10 @@ export default function ResumePage() {
 
     return (
         <div className="mx-auto w-full max-w-7xl space-y-5 px-4 py-4 md:px-6 md:py-5">
-            <section className="rounded-2xl border bg-gradient-to-r from-emerald-50 to-sky-50 p-4 md:p-5">
+            <section className="rounded-2xl border bg-muted/40 p-4 md:p-5">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="space-y-2">
-                        <p className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
+                        <p className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:border dark:border-emerald-800/60 dark:bg-emerald-900/40 dark:text-emerald-200">
                             <Sparkles className="h-3.5 w-3.5" />
                             Resume Builder
                         </p>
@@ -306,7 +306,7 @@ export default function ResumePage() {
                         </Button>
                     </div>
                 </div>
-                {statusMessage ? <p className="mt-3 text-sm text-emerald-700">{statusMessage}</p> : null}
+                {statusMessage ? <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-300">{statusMessage}</p> : null}
                 {errorMessage ? <p className="mt-3 text-sm text-destructive">{errorMessage}</p> : null}
             </section>
 

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -47,9 +47,9 @@ export default function LoginPage() {
     };
 
     return (
-        <Card className="w-full rounded-xl border-0 shadow-none">
+        <Card className="w-full rounded-xl border-0 bg-transparent shadow-none">
             <CardHeader className="pb-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-sky-700">Welcome back</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-sky-700 dark:text-sky-300">Welcome back</p>
                 <CardTitle className="text-3xl tracking-tight">Login</CardTitle>
                 <p className="text-sm text-muted-foreground">Continue your interview and resume prep.</p>
             </CardHeader>
@@ -60,7 +60,7 @@ export default function LoginPage() {
                         <Input
                             placeholder="name@example.com"
                             type="email"
-                            className="h-12 text-base"
+                            className="h-12 text-base dark:border-border dark:bg-background/70"
                             autoComplete="email"
                             {...register("email")}
                         />
@@ -77,7 +77,7 @@ export default function LoginPage() {
                             <Input
                                 placeholder="Enter password"
                                 type={showPassword ? "text" : "password"}
-                                className="h-12 pr-11 text-base"
+                                className="h-12 pr-11 text-base dark:border-border dark:bg-background/70"
                                 autoComplete="current-password"
                                 {...register("password")}
                             />
@@ -98,7 +98,7 @@ export default function LoginPage() {
                     </div>
 
                     {serverError && (
-                        <p className="text-center text-sm text-red-500">
+                        <p className="rounded-md bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">
                             {serverError}
                         </p>
                     )}
@@ -121,3 +121,4 @@ export default function LoginPage() {
         </Card>
     );
 }
+
