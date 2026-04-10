@@ -217,7 +217,7 @@ class _InterviewScreenState extends State<InterviewScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _interviewType,
+                  initialValue: _interviewType,
                   items: const <DropdownMenuItem<String>>[
                     DropdownMenuItem(value: 'TECHNICAL', child: Text('Technical')),
                     DropdownMenuItem(value: 'BEHAVIORAL', child: Text('Behavioral')),

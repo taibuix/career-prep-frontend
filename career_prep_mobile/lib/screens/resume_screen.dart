@@ -259,7 +259,7 @@ class _ResumeScreenState extends State<ResumeScreen> {
 
       if (_setupSectionId == null) {
         final created = await api.createResumeSection(
-          resumeId: activeResumeId!,
+          resumeId: activeResumeId,
           type: 'OTHER',
           order: 1,
           content: setupPayload,
@@ -284,7 +284,7 @@ class _ResumeScreenState extends State<ResumeScreen> {
 
         if (_sectionIds[entry.key] == null) {
           final created = await api.createResumeSection(
-            resumeId: activeResumeId!,
+            resumeId: activeResumeId,
             type: meta['type'] as String,
             order: meta['order'] as int,
             content: payload,
@@ -372,7 +372,7 @@ class _ResumeScreenState extends State<ResumeScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _template,
+                        initialValue: _template,
                         items: const <DropdownMenuItem<String>>[
                           DropdownMenuItem(value: 'modern', child: Text('Modern')),
                           DropdownMenuItem(value: 'minimal', child: Text('Minimal')),

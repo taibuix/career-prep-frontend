@@ -1,4 +1,3 @@
-import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 
 import '../models/app_models.dart';
@@ -8,7 +7,9 @@ import 'dio_cookie_setup.dart';
 class ApiClient {
   ApiClient._(this._dio);
 
-  static const String defaultBaseUrl = 'http://3.144.30.109:5000/api';
+  // Replace with your API subdomain once setup-https.sh has run.
+  // e.g. 'https://api.yourdomain.com/api'
+  static const String defaultBaseUrl = 'https://api.yourdomain.com/api';
 
   final Dio _dio;
 

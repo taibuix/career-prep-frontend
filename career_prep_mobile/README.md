@@ -13,16 +13,8 @@ Flutter mobile client for the Career Prep application in this repository.
 
 ## Project Notes
 
-This folder contains the Flutter app source, but the native `android/`, `ios/`, `macos/`, and similar platform folders were not generated in this environment.
-
-To finish bootstrapping locally:
-
-```bash
-cd career_prep_mobile
-flutter create .
-flutter pub get
-flutter run
-```
+This project is trimmed down for Android Play Store publishing.
+It keeps the Android project, Flutter source, assets, and signing configuration.
 
 ## Backend Configuration
 
@@ -37,6 +29,20 @@ That points to your EC2 backend server.
 If you are using:
 
 - a different backend later: update the same constant in `api_client.dart`
+
+## Play Store Release
+
+Build the Android App Bundle from this folder:
+
+```bash
+flutter build appbundle
+```
+
+The upload file will be:
+
+```text
+build/app/outputs/bundle/release/app-release.aab
+```
 
 ## Main Files
 

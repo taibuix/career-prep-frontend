@@ -131,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _targetRole,
+                  initialValue: _targetRole,
                   items: const <DropdownMenuItem<String>>[
                     DropdownMenuItem(value: 'frontend-engineer', child: Text('Frontend Engineer')),
                     DropdownMenuItem(value: 'backend-engineer', child: Text('Backend Engineer')),
@@ -143,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _experienceLevel,
+                  initialValue: _experienceLevel,
                   items: const <DropdownMenuItem<String>>[
                     DropdownMenuItem(value: 'internship', child: Text('Internship')),
                     DropdownMenuItem(value: 'entry-level', child: Text('Entry level')),

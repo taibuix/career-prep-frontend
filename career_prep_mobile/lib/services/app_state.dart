@@ -15,7 +15,7 @@ class AppState extends ChangeNotifier {
   static const String _profileLevelKey = 'career_prep.profile.experience_level';
   static const String _profileBioKey = 'career_prep.profile.bio';
 
-  ApiClient _apiClient;
+  final ApiClient _apiClient;
   final SharedPreferences _preferences;
 
   AppUser? user;

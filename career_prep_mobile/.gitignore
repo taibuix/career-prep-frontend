@@ -7,14 +7,17 @@
 .pub-cache/
 build/
 
+# Flutter-generated metadata (machine-specific)
+.metadata
+*.iml
+
+# Gradle user-home cache (generated at build time)
+.gradle-user/
+
 # IDE
 .idea/
 .vscode/
 
-# Platform generated files
-android/
-ios/
-linux/
-macos/
-web/
-windows/
+# Signing files
+android/key.properties
+upload-keystore.jks
