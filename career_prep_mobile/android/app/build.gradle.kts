@@ -20,7 +20,7 @@ android {
     ndkVersion = "27.0.12077973"
     defaultConfig {
         applicationId = "com.buitai97.careerprepmobile"
-        minSdk = 21
+        minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = 2
         versionName = "2.0.0"
